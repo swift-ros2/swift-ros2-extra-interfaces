@@ -5,7 +5,8 @@ import SwiftROS2Messages
 import XCTest
 
 final class RoundTripTests: XCTestCase {
-    private func roundTrip<T: CDRCodable & Equatable>(_ value: T, file: StaticString = #filePath, line: UInt = #line) throws
+    private func roundTrip<T: CDRCodable & Equatable>(_ value: T, file: StaticString = #filePath, line: UInt = #line)
+        throws
         -> Data
     {
         let encoder = CDREncoder()
