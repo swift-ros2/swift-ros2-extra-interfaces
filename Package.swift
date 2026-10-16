@@ -35,7 +35,7 @@ let package = Package(
     dependencies: dependencies,
     targets: interfaces.map { .target(name: $0.name, dependencies: core + $0.dependencies) }
         + [
-            .executableTarget(name: "ExtraInterfacesOracleCorpus", dependencies: core + allInterfaces)
-            // ExtraInterfacesTests is added together with Tests/ExtraInterfacesTests.
+            .executableTarget(name: "ExtraInterfacesOracleCorpus", dependencies: core + allInterfaces),
+            .testTarget(name: "ExtraInterfacesTests", dependencies: core + allInterfaces),
         ]
 )
