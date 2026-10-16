@@ -1,0 +1,20 @@
+# Upstream IDL for Scripts/regenerate.sh and the oracles: <name> <url> <distribution> <commit>.
+# control_msgs and moveit_msgs are pinned at the release tag rosdistro lists for the
+# distribution (distribution.yaml "release: version"), which is what the oracle installs from
+# apt. To move a line: git ls-remote --tags <url> <version>, then run Scripts/regenerate.sh and
+# commit this file together with the regenerated sources.
+control_msgs https://github.com/ros-controls/control_msgs.git humble 0a1d341f0960defc40a4b146b671dad74a429f4d
+control_msgs https://github.com/ros-controls/control_msgs.git jazzy 89a2c11ccafde3200f84839d78ecd30607dc6284
+control_msgs https://github.com/ros-controls/control_msgs.git kilted 0d5307a73e3809e94a50d004f3249370bf175827
+control_msgs https://github.com/ros-controls/control_msgs.git lyrical 0d5307a73e3809e94a50d004f3249370bf175827
+moveit_msgs https://github.com/moveit/moveit_msgs.git jazzy 55f802fe3ac455123efcdba1037d3abf2c8e4dcb
+moveit_msgs https://github.com/moveit/moveit_msgs.git kilted a76e0d67f356735b0a59313eca2c9a3fe2e17da7
+moveit_msgs https://github.com/moveit/moveit_msgs.git lyrical 15daf790c8008665f1e577755562f14b43bbd410
+rcl_interfaces https://github.com/ros2/rcl_interfaces.git humble 82776fc9068d1e0cd4af11c2e2700195994b2eb1
+rcl_interfaces https://github.com/ros2/rcl_interfaces.git jazzy 7aa3caf43377ea6ad615bc1040832e2c7566bfbe
+rcl_interfaces https://github.com/ros2/rcl_interfaces.git kilted 45871bf69f1e5f281cd8684393b03412fe340aeb
+rcl_interfaces https://github.com/ros2/rcl_interfaces.git lyrical b90e36e4adf5ed878efa2f365a84798f782618cd
+unique_identifier_msgs https://github.com/ros2/unique_identifier_msgs.git humble 27767cefcf8a80da44641dc208c57722c28aa11c
+unique_identifier_msgs https://github.com/ros2/unique_identifier_msgs.git jazzy 901599ee92c2ee949f42a5c5d821c92b3e515d69
+unique_identifier_msgs https://github.com/ros2/unique_identifier_msgs.git kilted 21bb7a23157e5408db4a46d72dbf29980e6bb206
+unique_identifier_msgs https://github.com/ros2/unique_identifier_msgs.git lyrical b4779af6b3d3c45e710802a0e7f86113da281ae8
