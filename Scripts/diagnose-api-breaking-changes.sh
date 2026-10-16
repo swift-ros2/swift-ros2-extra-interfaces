@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Wraps `swift package diagnose-api-breaking-changes` with a manual
+# allowlist filter. SwiftPM 6.0.x's built-in `--breakage-allowlist-path`
+# option does not reliably suppress matched breakages on macOS; this
+# script reads the allowlist itself (one literal diagnostic message per
+# line, comments / blank lines ignored) and exits 0 when every detected
+# breakage is allowlisted.
+#
+# Usage:
+#   diagnose-api-breaking-changes.sh <baseline-treeish> [allowlist-file]
+#
+# Without an allowlist, behaves exactly like the underlying SwiftPM
+# command.
+
+set -uo pipefail
+
+BASELINE="${1:?baseline treeish required}"
+ALLOWLIST="${2:-}"
+
+OUTPUT_FILE=$(mktemp)
+trap 'rm -f "$OUTPUT_FILE"' EXIT
+
+# Digest only the library products of this package. Without an explicit
+# product list the digester can abort looking for a baseline ABI file instead
+# of reporting breakages. The list comes from Package.swift, so a new module is
+# never left out.
+PRODUCTS=()
+while IFS= read -r product; do
+    PRODUCTS+=(--products "$product")
+done < <(swift package dump-package \
+    | python3 -c 'import json, sys; [print(p["name"]) for p in json.load(sys.stdin)["products"] if "library" in p["type"]]')
+if [[ ${#PRODUCTS[@]} -eq 0 ]]; then
+    echo "error: found no library products in Package.swift" >&2
+    exit 1
+fi
+
+set +e
+swift package diagnose-api-breaking-changes "$BASELINE" "${PRODUCTS[@]}" \
+    2>&1 | tee "$OUTPUT_FILE"
+EXIT=${PIPESTATUS[0]}
+set -e
+
+if [[ $EXIT -eq 0 ]]; then
+    exit 0
+fi
+
+if [[ -z "$ALLOWLIST" || ! -f "$ALLOWLIST" ]]; then
+    exit "$EXIT"
+fi
+
+# Every reported breakage line. The CLI prefix is `  💔 `; strip leading
+# whitespace and the emoji so what remains starts with `API breakage:`,
+# matching the exact format of the allowlist file. A breakage on a declaration
+# that still exists (for example a protocol requirement that was added) is also
+# printed as a compiler diagnostic, `<path>:<line>:<col>: warning: API breakage:
+# ... [#api-digester-breaking-change]`; reduce it to the same bare message so a
+# single allowlist line covers both forms.
+DETECTED=$(grep -F 'API breakage:' "$OUTPUT_FILE" \
+    | sed -E \
+        -e 's/^[[:space:]]*💔[[:space:]]+//' \
+        -e 's/^.*: warning: (API breakage:.*)$/\1/' \
+        -e 's/ \[#api-digester-breaking-change\]$//')
+
+# Allowed lines (drop comments and blank lines).
+ALLOWED=$(grep -vE '^[[:space:]]*(#|$)' "$ALLOWLIST" || true)
+
+UNEXPECTED=$(echo "$DETECTED" | grep -vFx -f <(echo "$ALLOWED") || true)
+
+if [[ -z "$UNEXPECTED" ]]; then
+    echo
+    echo "All ${EXIT} detected breakages are allowlisted via $ALLOWLIST; passing." >&2
+    exit 0
+fi
+
+echo
+echo "Unexpected breakages (not allowlisted):" >&2
+echo "$UNEXPECTED" >&2
+exit "$EXIT"
