@@ -8,11 +8,22 @@ native frameworks. Publish, subscribe, call and send goals with
 [swift-ros2](https://github.com/swift-ros2/swift-ros2).
 
 ```swift
-.package(url: "https://github.com/swift-ros2/swift-ros2-extra-interfaces.git", from: "1.0.0"),
+// swift-tools-version: 5.9
+// The interfaces need macOS 13, iOS 16, Mac Catalyst 16 or visionOS 1, like swift-ros2.
+platforms: [.iOS(.v16), .macOS(.v13), .macCatalyst(.v16), .visionOS(.v1)],
+dependencies: [
+    .package(url: "https://github.com/swift-ros2/swift-ros2-extra-interfaces.git", from: "1.0.0"),
+    // swift-ros2 does the publishing, subscribing, calls and goals.
+    .package(url: "https://github.com/swift-ros2/swift-ros2.git", from: "3.0.1"),
+],
 // …
 .product(name: "ControlMsgs", package: "swift-ros2-extra-interfaces"),
 .product(name: "MoveitMsgs", package: "swift-ros2-extra-interfaces"),
+.product(name: "SwiftROS2", package: "swift-ros2"),
 ```
+
+Until 1.0.0 is tagged, depend on the release candidate with `exact: "1.0.0-rc.1"`;
+`from: "1.0.0"` does not match a pre-release.
 
 | Module | ROS package | Types it holds | Distributions |
 | --- | --- | --- | --- |
@@ -46,12 +57,13 @@ import MoveitMsgs
 import SwiftROS2
 
 let context = try await ROS2Context(
-    transport: .zenoh(locator: "tcp/192.168.1.100:7447"), distro: .jazzy)
+    transport: .zenoh(locator: "tcp/192.168.1.100:7447", domainId: 0), distro: .jazzy)
 let node = try await context.createNode(name: "arm_teleop")
 
 // moveit_msgs/srv/ServoCommandType
 let client = try await node.createClient(
     ServoCommandTypeSrv.self, name: "/servo_node/switch_command_type")
+try await client.waitForService(timeout: .seconds(5))
 let response = try await client.call(
     ServoCommandTypeRequest(commandType: ServoCommandTypeRequest.TWIST), timeout: .seconds(2))
 print("switched: \(response.success)")
@@ -72,9 +84,11 @@ let handle = try await gripper.sendGoal(
 let result = try await handle.result()
 print("gripper: \(result)")
 watcher.cancel()
+await context.shutdown()
 ```
 
-Use swift-ros2's wire transports, `.zenoh` and `.dds`. On the RCL backend these types have no
+Use swift-ros2's wire transports: `.zenoh(locator:domainId:)`, `.ddsMulticast(domainId:)` or
+`.ddsUnicast(peers:domainId:)`. On the RCL backend these types have no
 bundled type support. Creating a client or server for `ServoCommandTypeSrv` or
 `GripperCommandAction` throws `TransportError.unsupportedFeature` on any RCL graph. A publisher
 or subscription for `ServoStatus` or `GripperCommand` throws only where RCL speaks Zenoh
