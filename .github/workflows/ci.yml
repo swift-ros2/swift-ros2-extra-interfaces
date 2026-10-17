@@ -1,0 +1,254 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-swift-format:
+    name: Lint (swift-format)
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.3-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint
+        run: swift format lint --recursive --strict --configuration .swift-format Package.swift Sources Tests
+      - name: Oracle workflow uses the resolved rosidl version
+        run: bash Scripts/check-oracle-ref.sh
+
+  build-macos:
+    name: Build & Test (macOS)
+    needs: [lint-swift-format]
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_26.4.1.app
+      - name: Build
+        run: swift build
+      - name: Test
+        run: swift test --parallel
+
+  build-linux:
+    name: Build & Test (Linux)
+    needs: [lint-swift-format]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Swift 6.3.1
+        uses: ./.github/actions/install-swift-linux
+        with:
+          version: "6.3.1"
+          ubuntu-version: "24.04"
+      - name: Build
+        run: swift build
+      - name: Test
+        run: swift test --parallel
+
+  build-windows:
+    name: Build & Test (Windows)
+    needs: [lint-swift-format]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The setup runs twice at most. A fresh runner once returned exit code 0
+      # from the installer after 93 s, yet `swift --version` then exited with
+      # 0xC0000135 (STATUS_DLL_NOT_FOUND): a one-off broken install, because the
+      # next run of the same job on the same image passed. The action's own
+      # `swift --version` check already catches that, so the first attempt may
+      # fail and the second reinstalls with /repair. The installer download is
+      # not cached: it is 1.76 GB, fetched in about 6 s, and the action would
+      # cache a truncated file when its download fails.
+      - name: Install Swift 6.3.1
+        id: setup-swift
+        continue-on-error: true
+        uses: compnerd/gha-setup-swift@eeda069c5bc95ac8a9ac5cea7d4f588ae5420ca5 # v0.4.0
+        with:
+          branch: swift-6.3.1-release
+          tag: 6.3.1-RELEASE
+      - name: Show the installer log of the failed Swift setup
+        if: steps.setup-swift.outcome == 'failure'
+        shell: pwsh
+        run: |
+          Write-Host "::warning::Swift setup failed; repairing the installation once"
+          Get-ChildItem "$env:TEMP\install*.log" -ErrorAction SilentlyContinue | Format-Table Name, Length
+          Get-Content "$env:TEMP\install.log" -Tail 60 -ErrorAction SilentlyContinue
+          Get-ChildItem "$env:LOCALAPPDATA\Programs\Swift" -Depth 2 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+      - name: Install Swift 6.3.1 (repair after a failed setup)
+        if: steps.setup-swift.outcome == 'failure'
+        uses: compnerd/gha-setup-swift@eeda069c5bc95ac8a9ac5cea7d4f588ae5420ca5 # v0.4.0
+        with:
+          branch: swift-6.3.1-release
+          tag: 6.3.1-RELEASE
+          installer-args: /repair
+      - name: Build
+        run: swift build
+      - name: Test
+        run: swift test --parallel
+
+  build-docs:
+    name: Build (DocC)
+    needs: [lint-swift-format]
+    runs-on: macos-26
+    env:
+      SWIFT_ROS2_DOCS_BUILD: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_26.4.1.app
+      - name: Generate DocC
+        run: |
+          swift package generate-documentation \
+            --target ControlMsgs \
+            --target MoveitMsgs
+      - name: Check DocC coverage
+        run: bash Scripts/check-docc-coverage.sh
+
+  build-android:
+    name: Build (Android ${{ matrix.abi }})
+    needs: [lint-swift-format]
+    # Pin explicitly to ubuntu-24.04 — the Swift 6.3.1 tarball downloaded
+    # below is the ubuntu24.04 build, so the runner must stay on 24.04.
+    # Using ubuntu-latest would break Android CI the day GitHub promotes
+    # 26.04 (glibc / libstdc++ mismatch against the 24.04 swiftmodule).
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - abi: arm64-v8a
+            triple: aarch64-unknown-linux-android28
+          - abi: x86_64
+            triple: x86_64-unknown-linux-android28
+    steps:
+      - uses: actions/checkout@v4
+      # Swift 6.3.1 — matches the Android SDK below. compnerd/gha-setup-swift
+      # silently installs Swift 6.3 on Linux regardless of `tag:`, which
+      # mismatches the SDK's prebuilt swiftmodules (\"module compiled
+      # with Swift 6.3.1 cannot be imported by the Swift 6.3 compiler\").
+      # Download directly from swift.org instead, same pattern as
+      # build-linux above.
+      - name: Install Swift 6.3.1
+        uses: ./.github/actions/install-swift-linux
+        with:
+          version: "6.3.1"
+          ubuntu-version: "24.04"
+      # The Swift Android SDK artifact bundle does not ship its own
+      # ndk-sysroot — it ships a setup-android-sdk.sh script that
+      # hydrates ndk-sysroot from a locally installed NDK in-place.
+      # Without running it, clang can't find <sys/time.h> / <string.h>
+      # under the SDK's --sysroot. The script requires NDK >= r27.
+      - name: Install Android NDK r27c
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27c
+          add-to-path: false
+      # The bundle is downloaded with curl (which retries) into the Actions
+      # cache and installed from the local file. SwiftPM's own downloader
+      # segfaulted inside libFoundationNetworking on 2026-10-15.
+      - name: Install Swift Android SDK
+        uses: ./.github/actions/install-swift-android-sdk
+        with:
+          # Pinned via organization variables so values can be rotated
+          # without a code change. Both are set, and made visible to this
+          # repository, at
+          # github.com/organizations/swift-ros2/settings/variables/actions:
+          #   SWIFT_ANDROID_SDK_URL      — full https URL of the
+          #                                .artifactbundle from
+          #                                swift.org/install/android
+          #   SWIFT_ANDROID_SDK_CHECKSUM — SHA-256 hex string from the
+          #                                same page
+          # If either is not visible here, the action fails fast with an
+          # actionable message.
+          sdk-url: ${{ vars.SWIFT_ANDROID_SDK_URL }}
+          sdk-checksum: ${{ vars.SWIFT_ANDROID_SDK_CHECKSUM }}
+          ndk-path: ${{ steps.setup-ndk.outputs.ndk-path }}
+      - name: Swift version
+        run: swift --version
+      - name: Build
+        run: swift build --swift-sdk ${{ matrix.triple }} -v
+
+  regen-drift:
+    name: Generated sources match idl.lock
+    needs: [lint-swift-format]
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_26.4.1.app
+      - name: Regenerate (fetches the IDL pinned in idl.lock first)
+        run: bash Scripts/regenerate.sh
+      - name: Check for drift
+        run: |
+          if [ -n "$(git status --porcelain -- Sources)" ]; then
+            git status --short -- Sources && git diff -- Sources
+            echo "::error::generated sources are stale — run Scripts/regenerate.sh and commit"
+            exit 1
+          fi
+
+  no-binary-artifacts:
+    name: Consumers download no binaries
+    needs: [lint-swift-format]
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_26.4.1.app
+      - name: Build a consumer of ControlMsgs and MoveitMsgs
+        run: |
+          mkdir -p /tmp/consumer/Sources/Consumer
+          cat > /tmp/consumer/Package.swift <<EOF
+          // swift-tools-version: 5.9
+          import PackageDescription
+          let package = Package(
+              name: "Consumer",
+              platforms: [.macOS(.v13)],
+              dependencies: [.package(path: "$GITHUB_WORKSPACE")],
+              targets: [
+                  .target(
+                      name: "Consumer",
+                      dependencies: [
+                          .product(name: "ControlMsgs", package: "swift-ros2-extra-interfaces"),
+                          .product(name: "MoveitMsgs", package: "swift-ros2-extra-interfaces"),
+                      ]
+                  )
+              ]
+          )
+          EOF
+          cat > /tmp/consumer/Sources/Consumer/Consumer.swift <<'EOF'
+          import ControlMsgs
+          import MoveitMsgs
+
+          public let goal = GripperCommandAction.Goal()
+          public let status = ServoStatus()
+          EOF
+          cd /tmp/consumer && swift build
+          if [ -n "$(find .build/artifacts -mindepth 1 -print -quit 2>/dev/null)" ]; then find .build/artifacts -maxdepth 3; exit 1; fi
+
+  check-api-stability:
+    name: Check (API stability vs latest 1.x release)
+    needs: [lint-swift-format]
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Resolve baseline
+        id: baseline
+        run: |
+          tag=$(git tag -l '1.[0-9]*.[0-9]*' | awk '!/-/' | sort -V | tail -n1)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          [ -n "$tag" ] || echo "::notice::no stable 1.x tag yet; skipping"
+      - name: Select Xcode
+        if: steps.baseline.outputs.tag != ''
+        run: sudo xcode-select -switch /Applications/Xcode_26.4.1.app
+      - name: Diagnose API breaking changes
+        if: steps.baseline.outputs.tag != ''
+        run: bash Scripts/diagnose-api-breaking-changes.sh "${{ steps.baseline.outputs.tag }}" Scripts/api-breakage-allowlist.txt
