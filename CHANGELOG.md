@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.0.0-rc.1
 
-First release, not yet tagged.
+First release candidate. Until 1.0.0, depend on it with `exact: "1.0.0-rc.1"`; `from: "1.0.0"` resolves only once 1.0.0 is tagged.
 
 - `ControlMsgs`: `control_msgs/msg/GripperCommand` and `control_msgs/action/GripperCommand`
   (`GripperCommandAction`), generated from the Humble, Jazzy, Kilted and Lyrical IDL.
