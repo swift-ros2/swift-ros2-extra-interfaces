@@ -19,8 +19,10 @@ native frameworks. Publish, subscribe, call and send goals with
 | `ControlMsgs` | `control_msgs` | `GripperCommand` (message), `GripperCommandAction` (action, with `Goal`, `Result` and `Feedback`) | Humble, Jazzy, Kilted, Lyrical |
 | `MoveitMsgs` | `moveit_msgs` | `ServoStatus` (message), `ServoCommandTypeSrv` (service, with `ServoCommandTypeRequest` and `ServoCommandTypeResponse`) | Jazzy, Kilted, Lyrical |
 
-A module holds a subset of its ROS package: the interfaces listed above and nothing else, not
-the whole upstream package. Requests for more types are welcome; open an issue.
+A module holds a subset of its ROS package: the interfaces listed above, plus the generated
+action wrapper types (such as `GripperCommand_SendGoal_Request` and
+`GripperCommand_FeedbackMessage`), and nothing else, not the whole upstream package. Requests
+for more types are welcome; open an issue.
 
 `moveit_msgs` added the Servo interfaces in 2.6.0 (Jazzy), so `MoveitMsgs` starts at Jazzy;
 Humble's `moveit_msgs` 2.2.3 has neither. Rolling uses the Lyrical definitions. There is no
@@ -72,9 +74,11 @@ print("gripper: \(result)")
 watcher.cancel()
 ```
 
-Use swift-ros2's wire transports, `.zenoh` and `.dds`. The RCL backend has no bundled type
-support for these types: on a graph where RCL speaks Zenoh (`rmw_zenoh_cpp`), creating a
-client, server, publisher or subscription for one throws `TransportError.unsupportedFeature`.
+Use swift-ros2's wire transports, `.zenoh` and `.dds`. On the RCL backend these types have no
+bundled type support. Creating a client or server for `ServoCommandTypeSrv` or
+`GripperCommandAction` throws `TransportError.unsupportedFeature` on any RCL graph. A publisher
+or subscription for `ServoStatus` or `GripperCommand` throws only where RCL speaks Zenoh
+(`rmw_zenoh_cpp`).
 
 ## Upstream IDL and regeneration
 
