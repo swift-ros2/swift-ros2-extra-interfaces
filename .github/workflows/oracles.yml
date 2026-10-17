@@ -1,0 +1,20 @@
+name: Oracles
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '41 3 * * 1'
+  workflow_dispatch:
+
+jobs:
+  interfaces:
+    # The rosidl version Package.resolved pins; it moves with Package.resolved, never @main.
+    # Scripts/check-oracle-ref.sh (CI lint job) fails when the two differ.
+    uses: swift-ros2/swift-ros2-rosidl/.github/workflows/interface-oracles.yml@1.0.1
+    with:
+      corpus-product: ExtraInterfacesOracleCorpus
+      # Installed into osrf/ros:<distro>-desktop for both oracles; ${distro} is the row's
+      # distribution.
+      apt-packages: ros-${distro}-control-msgs ros-${distro}-moveit-msgs
