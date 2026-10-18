@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.0.0 - 2026-10-17
+
+First stable release; the public API is now covered by semantic versioning. The generated code is
+the same as 1.0.0-rc.1, and the package still depends only on swift-ros2-rosidl (`from: "1.0.0"`;
+CI and the oracles run against 1.0.1, which changes no package code).
+
+1.0.0-rc.1 passed live interop through swift-ros2 against ROS 2 Humble, Jazzy, Kilted and Lyrical
+hosts over both the wire Zenoh and the wire DDS transports:
+
+- messages in both directions;
+- the `ServoCommandType` service as client and as server;
+- the `GripperCommand` action as client and as server;
+- on Jazzy, Kilted and Lyrical, all 15 type hashes equal the host's type descriptions. Humble has
+  only `GripperCommand` and no type hashes.
+
+The RCL transports report `TransportError.unsupportedFeature` cleanly for the services and actions
+of these types, since there is no bundled type support; RCL DDS topics work through the raw-CDR
+fallback. A fresh-package README walkthrough also passed.
+
 ## 1.0.0-rc.1
 
 First release candidate. Until 1.0.0, depend on it with `exact: "1.0.0-rc.1"`; `from: "1.0.0"` resolves only once 1.0.0 is tagged.

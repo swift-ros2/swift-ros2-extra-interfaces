@@ -22,9 +22,6 @@ dependencies: [
 .product(name: "SwiftROS2", package: "swift-ros2"),
 ```
 
-Until 1.0.0 is tagged, depend on the release candidate with `exact: "1.0.0-rc.1"`;
-`from: "1.0.0"` does not match a pre-release.
-
 | Module | ROS package | Types it holds | Distributions |
 | --- | --- | --- | --- |
 | `ControlMsgs` | `control_msgs` | `GripperCommand` (message), `GripperCommandAction` (action, with `Goal`, `Result` and `Feedback`) | Humble, Jazzy, Kilted, Lyrical |
