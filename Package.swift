@@ -9,7 +9,7 @@ import PackageDescription
 // only on swift-ros2-rosidl, so it never downloads native frameworks.
 
 var dependencies: [Package.Dependency] = [
-    .package(url: "https://github.com/swift-ros2/swift-ros2-rosidl.git", from: "1.1.0")
+    .package(url: "https://github.com/swift-ros2/swift-ros2-rosidl.git", from: "1.1.1")
 ]
 if ProcessInfo.processInfo.environment["SWIFT_ROS2_DOCS_BUILD"] == "1" {
     dependencies.append(.package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"))
