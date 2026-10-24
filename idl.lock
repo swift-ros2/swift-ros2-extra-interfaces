@@ -1,8 +1,15 @@
 # Upstream IDL for Scripts/regenerate.sh and the oracles: <name> <url> <distribution> <commit>.
-# control_msgs and moveit_msgs are pinned at the release tag rosdistro lists for the
-# distribution (distribution.yaml "release: version"), which is what the oracle installs from
-# apt. To move a line: git ls-remote --tags <url> <version>, then run Scripts/regenerate.sh and
-# commit this file together with the regenerated sources.
+# control_msgs, moveit_msgs, octomap_msgs and object_recognition_msgs are pinned at the release
+# tag rosdistro lists for the distribution (distribution.yaml "release: version"), which is what
+# the oracle installs from apt. To move a line: git ls-remote --tags <url> <version>, then run
+# Scripts/regenerate.sh and commit this file together with the regenerated sources.
+# common_interfaces, rcl_interfaces and unique_identifier_msgs are the commits
+# swift-ros2-common-interfaces' idl.lock pins: their types live in that package (or in
+# swift-ros2-rosidl), and the hashes of the types here must include the same dependency IDL.
+common_interfaces https://github.com/ros2/common_interfaces.git humble 08434490d3e4abd37ccc5462cdde69b88853b5b8
+common_interfaces https://github.com/ros2/common_interfaces.git jazzy a941f14bb318d8d904505ed935ccbb97f24a70a4
+common_interfaces https://github.com/ros2/common_interfaces.git kilted 7532fccbc3538582c6c1d187c5a809a99d8937df
+common_interfaces https://github.com/ros2/common_interfaces.git lyrical 6099c3b82abe20da50bf410e8173127ea1d83d30
 control_msgs https://github.com/ros-controls/control_msgs.git humble 0a1d341f0960defc40a4b146b671dad74a429f4d
 control_msgs https://github.com/ros-controls/control_msgs.git jazzy 89a2c11ccafde3200f84839d78ecd30607dc6284
 control_msgs https://github.com/ros-controls/control_msgs.git kilted 0d5307a73e3809e94a50d004f3249370bf175827
@@ -10,6 +17,12 @@ control_msgs https://github.com/ros-controls/control_msgs.git lyrical 0d5307a73e
 moveit_msgs https://github.com/moveit/moveit_msgs.git jazzy 55f802fe3ac455123efcdba1037d3abf2c8e4dcb
 moveit_msgs https://github.com/moveit/moveit_msgs.git kilted a76e0d67f356735b0a59313eca2c9a3fe2e17da7
 moveit_msgs https://github.com/moveit/moveit_msgs.git lyrical 15daf790c8008665f1e577755562f14b43bbd410
+object_recognition_msgs https://github.com/wg-perception/object_recognition_msgs.git jazzy 811fb385ec4c1919dce2b30334fe9f49639073fd
+object_recognition_msgs https://github.com/wg-perception/object_recognition_msgs.git kilted 811fb385ec4c1919dce2b30334fe9f49639073fd
+object_recognition_msgs https://github.com/wg-perception/object_recognition_msgs.git lyrical 811fb385ec4c1919dce2b30334fe9f49639073fd
+octomap_msgs https://github.com/octomap/octomap_msgs.git jazzy 50eece2bfc2f3163b2fb70b9157356e12d375dff
+octomap_msgs https://github.com/octomap/octomap_msgs.git kilted 50eece2bfc2f3163b2fb70b9157356e12d375dff
+octomap_msgs https://github.com/octomap/octomap_msgs.git lyrical 50eece2bfc2f3163b2fb70b9157356e12d375dff
 rcl_interfaces https://github.com/ros2/rcl_interfaces.git humble 82776fc9068d1e0cd4af11c2e2700195994b2eb1
 rcl_interfaces https://github.com/ros2/rcl_interfaces.git jazzy 7aa3caf43377ea6ad615bc1040832e2c7566bfbe
 rcl_interfaces https://github.com/ros2/rcl_interfaces.git kilted 45871bf69f1e5f281cd8684393b03412fe340aeb

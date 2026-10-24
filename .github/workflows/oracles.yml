@@ -16,5 +16,8 @@ jobs:
     with:
       corpus-product: ExtraInterfacesOracleCorpus
       # Installed into osrf/ros:<distro>-desktop for both oracles; ${distro} is the row's
-      # distribution.
-      apt-packages: ros-${distro}-control-msgs ros-${distro}-moveit-msgs
+      # distribution. moveit-msgs depends on the other two; they are listed because the oracles
+      # check their types too.
+      apt-packages: >-
+        ros-${distro}-control-msgs ros-${distro}-moveit-msgs ros-${distro}-object-recognition-msgs
+        ros-${distro}-octomap-msgs
