@@ -10,6 +10,15 @@
       }
     },
     {
+      "identity" : "swift-ros2-common-interfaces",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swift-ros2/swift-ros2-common-interfaces.git",
+      "state" : {
+        "revision" : "ff9b4a48461411c1e3b76d67b7ac292b1eb3bec4",
+        "version" : "1.0.0"
+      }
+    },
+    {
       "identity" : "swift-ros2-rosidl",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swift-ros2/swift-ros2-rosidl.git",
