@@ -2,8 +2,32 @@
 
 ## Unreleased
 
+### Added
+
+- `MoveitMsgs`: `moveit_msgs/action/MoveGroup` (`MoveGroupAction`, with `Goal`, `Result`,
+  `Feedback` and the SendGoal / GetResult / FeedbackMessage wrappers) and the 26 `moveit_msgs`
+  messages it reaches, among them `MotionPlanRequest`, `PlanningOptions`, `Constraints`,
+  `JointConstraint`, `RobotState`, `RobotTrajectory`, `PlanningScene` and `MoveItErrorCodes`.
+  Generated from the Jazzy (2.6.0), Kilted (2.7.1) and Lyrical (2.7.2) IDL; no Humble.
+- New modules `ObjectRecognitionMsgs` (`object_recognition_msgs/msg/ObjectType`) and
+  `OctomapMsgs` (`octomap_msgs/msg/Octomap`, `OctomapWithPose`), for the types `moveit_msgs`
+  uses, generated from object_recognition_msgs 2.0.0 and octomap_msgs 2.0.1.
+- `MotionPlanRequest.smoothnessLevel` (Lyrical's `smoothness_level`) is encoded only for Lyrical
+  and later and decodes as `0.0` on Jazzy and Kilted. `MotionPlanRequest`,
+  `MoveGroupAction.Goal`, `MoveGroup_SendGoal_Request` and the SendGoal service have one type
+  hash on Jazzy and Kilted and another on Lyrical and Rolling, from `typeInfo(for:)`.
+
 ### Changed
 
+- Depends on swift-ros2-common-interfaces (`from: "1.0.0"`) for the standard types the MoveGroup
+  types hold. `idl.lock` pins `common_interfaces` at the commits swift-ros2-common-interfaces
+  generates from, plus `object_recognition_msgs` and `octomap_msgs` at their rosdistro release
+  tags.
+- Programs that send these types with swift-ros2 need swift-ros2 3.1.0 or later, which sends the
+  layout and hash of the context's distribution. With 3.0.x, a MoveGroup goal goes out with the
+  Jazzy layout and hash on Lyrical, and Lyrical's `move_group` does not take it.
+- The CI lint step skips the generated oracle samples, whose generated lines can exceed the line
+  length; the drift check still covers them.
 - Requires swift-ros2-rosidl 1.1.1 (`from: "1.1.1"`), and the oracle workflow runs its
   `interface-oracles.yml@1.1.1`. The generated types are unchanged. The oracle corpus encodes
   the samples of a distribution with that distribution's message schemas
