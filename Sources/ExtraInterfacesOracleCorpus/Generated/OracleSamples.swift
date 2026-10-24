@@ -16,67 +16,88 @@ struct OracleSample {
     let reencode: (Data) throws -> Data
 }
 
+/// One generated type: an ``OracleSample`` whose codecs take the message schemas of a
+/// distribution (nil: the default, Jazzy).
+struct OracleType {
+    let rosName: String
+    let distributions: Set<String>
+    let encode: (ROS2Distro?) throws -> Data
+    let reencode: (Data, ROS2Distro?) throws -> Data
+
+    func sample(schema: ROS2Distro?) -> OracleSample {
+        OracleSample(
+            rosName: rosName, distributions: distributions, encode: { try encode(schema) },
+            reencode: { try reencode($0, schema) })
+    }
+}
+
 /// The samples of this run.
 enum OracleSamples {
     /// Every distribution this run read IDL for.
     static let distributions: Set<String> = ["humble", "jazzy", "kilted", "lyrical"]
 
-    /// The samples of the types `distro` has, or nil when this run read no IDL for
-    /// `distro`. Without Rolling IDL, Rolling has the Lyrical samples: generated types
-    /// give Rolling the modern (Lyrical) hash.
+    /// The samples of the types `distro` has, encoded and decoded with the message
+    /// schemas of `distro`, or nil when this run read no IDL for `distro`. Without
+    /// Rolling IDL, Rolling has the Lyrical samples: generated types give
+    /// Rolling the Lyrical shape and hash.
     static func samples(for distro: String) -> [OracleSample]? {
         let source = distro == "rolling" && !distributions.contains("rolling") ? "lyrical" : distro
         guard distributions.contains(source) else { return nil }
-        return all.filter { $0.distributions.contains(source) }
+        let schema = ROS2Distro(rawValue: distro)
+        return types.filter { $0.distributions.contains(source) }.map { $0.sample(schema: schema) }
     }
 
-    /// Every sample, in ROS-name order.
-    static let all: [OracleSample] = [
-        OracleSample(
+    /// Every sample, in ROS-name order, with the default (Jazzy) schemas.
+    static let all: [OracleSample] = types.map { $0.sample(schema: nil) }
+
+    /// Every type, in ROS-name order.
+    static let types: [OracleType] = [
+        OracleType(
             rosName: "control_msgs/action/GripperCommand_Feedback",
             distributions: ["humble", "jazzy", "kilted", "lyrical"],
-            encode: { try oracleEncode(GripperCommandAction.Feedback.oracleSample()) },
-            reencode: { try oracleReencode(GripperCommandAction.Feedback.self, $0) }),
-        OracleSample(
+            encode: { try oracleEncode(GripperCommandAction.Feedback.oracleSample(), $0) },
+            reencode: { try oracleReencode(GripperCommandAction.Feedback.self, $0, $1) }),
+        OracleType(
             rosName: "control_msgs/action/GripperCommand_Goal",
             distributions: ["humble", "jazzy", "kilted", "lyrical"],
-            encode: { try oracleEncode(GripperCommandAction.Goal.oracleSample()) },
-            reencode: { try oracleReencode(GripperCommandAction.Goal.self, $0) }),
-        OracleSample(
+            encode: { try oracleEncode(GripperCommandAction.Goal.oracleSample(), $0) },
+            reencode: { try oracleReencode(GripperCommandAction.Goal.self, $0, $1) }),
+        OracleType(
             rosName: "control_msgs/action/GripperCommand_Result",
             distributions: ["humble", "jazzy", "kilted", "lyrical"],
-            encode: { try oracleEncode(GripperCommandAction.Result.oracleSample()) },
-            reencode: { try oracleReencode(GripperCommandAction.Result.self, $0) }),
-        OracleSample(
+            encode: { try oracleEncode(GripperCommandAction.Result.oracleSample(), $0) },
+            reencode: { try oracleReencode(GripperCommandAction.Result.self, $0, $1) }),
+        OracleType(
             rosName: "control_msgs/msg/GripperCommand",
             distributions: ["humble", "jazzy", "kilted", "lyrical"],
-            encode: { try oracleEncode(GripperCommand.oracleSample()) },
-            reencode: { try oracleReencode(GripperCommand.self, $0) }),
-        OracleSample(
+            encode: { try oracleEncode(GripperCommand.oracleSample(), $0) },
+            reencode: { try oracleReencode(GripperCommand.self, $0, $1) }),
+        OracleType(
             rosName: "moveit_msgs/msg/ServoStatus",
             distributions: ["jazzy", "kilted", "lyrical"],
-            encode: { try oracleEncode(ServoStatus.oracleSample()) },
-            reencode: { try oracleReencode(ServoStatus.self, $0) }),
-        OracleSample(
+            encode: { try oracleEncode(ServoStatus.oracleSample(), $0) },
+            reencode: { try oracleReencode(ServoStatus.self, $0, $1) }),
+        OracleType(
             rosName: "moveit_msgs/srv/ServoCommandType_Request",
             distributions: ["jazzy", "kilted", "lyrical"],
-            encode: { try oracleEncode(ServoCommandTypeRequest.oracleSample()) },
-            reencode: { try oracleReencode(ServoCommandTypeRequest.self, $0) }),
-        OracleSample(
+            encode: { try oracleEncode(ServoCommandTypeRequest.oracleSample(), $0) },
+            reencode: { try oracleReencode(ServoCommandTypeRequest.self, $0, $1) }),
+        OracleType(
             rosName: "moveit_msgs/srv/ServoCommandType_Response",
             distributions: ["jazzy", "kilted", "lyrical"],
-            encode: { try oracleEncode(ServoCommandTypeResponse.oracleSample()) },
-            reencode: { try oracleReencode(ServoCommandTypeResponse.self, $0) }),
+            encode: { try oracleEncode(ServoCommandTypeResponse.oracleSample(), $0) },
+            reencode: { try oracleReencode(ServoCommandTypeResponse.self, $0, $1) }),
     ]
 }
 
-func oracleEncode<T: CDREncodable>(_ value: T) throws -> Data {
-    let encoder = CDREncoder()
+func oracleEncode<T: CDREncodable>(_ value: T, _ schema: ROS2Distro?) throws -> Data {
+    let encoder = schema.map { CDREncoder(distro: $0) } ?? CDREncoder()
     encoder.writeEncapsulationHeader()
     try value.encode(to: encoder)
     return encoder.getData()
 }
 
-func oracleReencode<T: CDRCodable>(_ type: T.Type, _ data: Data) throws -> Data {
-    try oracleEncode(T(from: CDRDecoder(data: data)))
+func oracleReencode<T: CDRCodable>(_ type: T.Type, _ data: Data, _ schema: ROS2Distro?) throws -> Data {
+    let decoder = try schema.map { try CDRDecoder(data: data, distro: $0) } ?? CDRDecoder(data: data)
+    return try oracleEncode(T(from: decoder), schema)
 }

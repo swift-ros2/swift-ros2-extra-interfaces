@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Requires swift-ros2-rosidl 1.1.1 (`from: "1.1.1"`), and the oracle workflow runs its
+  `interface-oracles.yml@1.1.1`. The generated types are unchanged. The oracle corpus encodes
+  the samples of a distribution with that distribution's message schemas
+  (`OracleSamples.samples(for:)`) and round-trips them as well as the default set.
+
 ## 1.0.0 - 2026-10-17
 
 First stable release; the public API is now covered by semantic versioning. The generated code is
