@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.1.0-rc.1
+
+Release candidate for 1.1.0: the MoveGroup action and the types it reaches. Until 1.1.0, depend
+on it with `exact: "1.1.0-rc.1"`; `from: "1.1.0"` resolves only once 1.1.0 is tagged. Send these
+types with swift-ros2 3.1.0-rc.1 (`exact: "3.1.0-rc.1"`) until swift-ros2 3.1.0 is tagged.
 
 ### Added
 
