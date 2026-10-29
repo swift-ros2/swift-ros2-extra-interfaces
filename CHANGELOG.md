@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 - 2026-10-29
+
+The MoveGroup action and the types it reaches; see 1.1.0-rc.1 below. The generated code is the
+same as 1.1.0-rc.1. Send these types with swift-ros2 3.1.0 or later (`from: "3.1.0"`). Conduit 3.0,
+built against 1.1.0-rc.1 and swift-ros2 3.1.0-rc.1, sends MoveGroup goals to `move_group` on a
+ROS 2 Jazzy host and reads their outcomes, including canceled goals and MoveIt error codes.
+
 ## 1.1.0-rc.1
 
 Release candidate for 1.1.0: the MoveGroup action and the types it reaches. Until 1.1.0, depend
