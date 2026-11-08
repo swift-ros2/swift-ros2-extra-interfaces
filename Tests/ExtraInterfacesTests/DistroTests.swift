@@ -1,5 +1,6 @@
 import ControlMsgs
 import MoveitMsgs
+import Nav2Msgs
 import ObjectRecognitionMsgs
 import OctomapMsgs
 import SwiftROS2CDR
@@ -182,5 +183,60 @@ final class DistroTests: XCTestCase {
         XCTAssertEqual(try encoded(goal, distro: .lyrical).count, try encoded(goal, distro: .jazzy).count + 8)
         let request = MoveGroup_SendGoal_Request(goal: goal)
         XCTAssertEqual(try encoded(request, distro: .lyrical).count, try encoded(request, distro: .jazzy).count + 8)
+    }
+
+    // MARK: - NavigateToPose
+
+    /// The hashes of the `ros-<distro>-nav2-msgs` packages (nav2_msgs 1.3.14, 1.4.2 and 1.5.3). The
+    /// goal, the result (whose distributions differ only in constants, which are not hashed) and the
+    /// SendGoal request are the same on Jazzy, Kilted and Lyrical. Lyrical's feedback adds
+    /// `position_tracking_error` and `heading_tracking_error`, so the feedback and the
+    /// FeedbackMessage have one hash on Jazzy and Kilted and another on Lyrical and Rolling (which
+    /// takes the Lyrical shape). Humble has none.
+    func testNavigateToPoseHashesPerDistribution() {
+        let goal = "RIHS01_22a9dffbd6733011220460bd52edbc7843c8fc86282d40bc7ad3ca176a9dec10"
+        let result = "RIHS01_ddbff7fc6d1e51d774d5defdb8398a57cb23fa8709355002d676408bb4860b85"
+        let sendGoalRequest = "RIHS01_e9381f2acfe9fa8c4838a277d0cde28a93c483564827b9f13496b9c2092e4f09"
+        let jazzyFeedback = "RIHS01_9ebc544c7d41bd8c6060b191bf9f5e4ddca6c2f61ee9e04fcb62ed5d67218a33"
+        let lyricalFeedback = "RIHS01_f37016a810a4d5541cadeb74dfc5892b1cf197e84dea241276c1de178d90420b"
+        let jazzyFeedbackMessage = "RIHS01_9d1f6fa2eb975ce733b419ac2e97b134d8ff92b6478b6559feed9a50bdfd82b3"
+        let lyricalFeedbackMessage = "RIHS01_2c1b4ec1a0e3a53c9aa326aabe717670eeef0ff3d4c3351ff940613b2011728a"
+
+        for distro in [ROS2Distro.jazzy, .kilted, .lyrical, .rolling] {
+            let info = NavigateToPoseAction.typeInfo(for: distro)
+            XCTAssertEqual(info.actionName, "nav2_msgs/action/NavigateToPose", "\(distro)")
+            XCTAssertEqual(info.goalTypeHash, goal, "\(distro)")
+            XCTAssertEqual(info.resultTypeHash, result, "\(distro)")
+            XCTAssertEqual(info.sendGoalRequestTypeHash, sendGoalRequest, "\(distro)")
+            XCTAssertEqual(
+                NavigateToPose_SendGoal_Request.typeInfo(for: distro).typeHash, sendGoalRequest, "\(distro)")
+        }
+        for distro in [ROS2Distro.jazzy, .kilted] {
+            let info = NavigateToPoseAction.typeInfo(for: distro)
+            XCTAssertEqual(info.feedbackTypeHash, jazzyFeedback, "\(distro)")
+            XCTAssertEqual(info.feedbackMessageTypeHash, jazzyFeedbackMessage, "\(distro)")
+            XCTAssertEqual(
+                NavigateToPose_FeedbackMessage.typeInfo(for: distro).typeHash, jazzyFeedbackMessage, "\(distro)")
+        }
+        for distro in [ROS2Distro.lyrical, .rolling] {
+            let info = NavigateToPoseAction.typeInfo(for: distro)
+            XCTAssertEqual(info.feedbackTypeHash, lyricalFeedback, "\(distro)")
+            XCTAssertEqual(info.feedbackMessageTypeHash, lyricalFeedbackMessage, "\(distro)")
+            XCTAssertEqual(
+                NavigateToPose_FeedbackMessage.typeInfo(for: distro).typeHash, lyricalFeedbackMessage,
+                "\(distro)")
+        }
+        XCTAssertEqual(NavigateToPoseAction.typeInfo.feedbackTypeHash, jazzyFeedback)
+        XCTAssertEqual(NavigateToPose_FeedbackMessage.typeInfo.typeHash, jazzyFeedbackMessage)
+
+        let humble = NavigateToPoseAction.typeInfo(for: .humble)
+        XCTAssertEqual(humble.actionName, "nav2_msgs/action/NavigateToPose")
+        XCTAssertNil(humble.goalTypeHash)
+        XCTAssertNil(humble.resultTypeHash)
+        XCTAssertNil(humble.feedbackTypeHash)
+        XCTAssertNil(humble.sendGoalRequestTypeHash)
+        XCTAssertNil(humble.feedbackMessageTypeHash)
+        XCTAssertNil(NavigateToPose_SendGoal_Request.typeInfo(for: .humble).typeHash)
+        XCTAssertNil(NavigateToPose_FeedbackMessage.typeInfo(for: .humble).typeHash)
     }
 }
