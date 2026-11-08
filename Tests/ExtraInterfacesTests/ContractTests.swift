@@ -1,7 +1,10 @@
 import ControlMsgs
+import GeometryMsgs
 import MoveitMsgs
+import Nav2Msgs
 import ObjectRecognitionMsgs
 import OctomapMsgs
+import StdMsgs
 import SwiftROS2Messages
 import XCTest
 
@@ -111,6 +114,22 @@ final class ContractTests: XCTestCase {
         XCTAssertEqual(result.executedTrajectory, RobotTrajectory())
         XCTAssertEqual(result.trajectoryStart, RobotState())
         XCTAssertEqual(MoveGroupAction.Feedback(state: "PLANNING").state, "PLANNING")
+    }
+
+    /// The goal Conduit sends to Nav2 and the result fields it reads.
+    func testNavigateToPoseNames() {
+        XCTAssertEqual(NavigateToPoseAction.typeInfo.actionName, "nav2_msgs/action/NavigateToPose")
+        XCTAssertEqual(
+            NavigateToPose_SendGoal_Request.typeInfo.typeName, "nav2_msgs/action/NavigateToPose_SendGoal_Request")
+        XCTAssertEqual(
+            NavigateToPose_FeedbackMessage.typeInfo.typeName, "nav2_msgs/action/NavigateToPose_FeedbackMessage")
+        let goal = NavigateToPoseAction.Goal(
+            pose: PoseStamped(header: Header(frameId: "map"), pose: Pose()), behaviorTree: "")
+        XCTAssertEqual(goal.pose.header.frameId, "map")
+        XCTAssertEqual(goal.behaviorTree, "")
+        let result = NavigateToPoseAction.Result(errorCode: 9002, errorMsg: "TF error")
+        XCTAssertEqual(result.errorCode, 9002)
+        XCTAssertEqual(result.errorMsg, "TF error")
     }
 
     func testMoveItErrorCodesConstants() {

@@ -1,7 +1,10 @@
 import BuiltinInterfaces
 import ControlMsgs
+import GeometryMsgs
 import MoveitMsgs
+import Nav2Msgs
 import SensorMsgs
+import StdMsgs
 import SwiftROS2CDR
 import SwiftROS2Messages
 import UniqueIdentifierMsgs
@@ -67,15 +70,17 @@ final class RoundTripTests: XCTestCase {
     /// Every distribution the MoveGroup closure is generated for, plus Rolling (Lyrical shape).
     private let moveGroupDistros: [ROS2Distro] = [.jazzy, .kilted, .lyrical, .rolling]
 
+    @discardableResult
     private func roundTrip<T: CDRCodable & Equatable>(
         _ value: T, distro: ROS2Distro, file: StaticString = #filePath, line: UInt = #line
-    ) throws {
+    ) throws -> Data {
         let encoder = CDREncoder(distro: distro)
         encoder.writeEncapsulationHeader()
         try value.encode(to: encoder)
         let bytes = encoder.getData()
         let decoded = try T(from: try CDRDecoder(data: bytes, distro: distro))
         XCTAssertEqual(decoded, value, "\(distro)", file: file, line: line)
+        return bytes
     }
 
     /// A value whose `smoothnessLevel` survives only where it is encoded.
@@ -154,5 +159,57 @@ final class RoundTripTests: XCTestCase {
                 MoveGroup_FeedbackMessage(goalId: goalId, feedback: MoveGroupAction.Feedback(state: "PLANNING")),
                 distro: distro)
         }
+    }
+
+    // MARK: - NavigateToPose
+
+    /// The goal Conduit sends: the same fields on every distribution, so the same bytes.
+    func testNavigateToPoseGoalRoundTripsOnEveryDistribution() throws {
+        let goal = NavigateToPoseAction.Goal(
+            pose: PoseStamped(
+                header: Header(stamp: Time(sec: 12, nanosec: 345), frameId: "map"),
+                pose: Pose(
+                    position: Point(x: 1.5, y: -2.25, z: 0),
+                    orientation: Quaternion(x: 0, y: 0, z: 0.7071, w: 0.7071))),
+            behaviorTree: "")
+        let jazzy = try roundTrip(goal, distro: .jazzy)
+        for distro in ROS2Distro.allCases {
+            XCTAssertEqual(try roundTrip(goal, distro: distro), jazzy, "\(distro)")
+        }
+    }
+
+    /// Lyrical's nav2_msgs 1.5 adds `position_tracking_error` and `heading_tracking_error` (two
+    /// float32 after `distance_remaining`): Lyrical and Rolling carry 8 more bytes than Humble, Jazzy
+    /// and Kilted, and the two fields decode as 0 where they are absent.
+    func testNavigateToPoseFeedbackHasTheTrackingErrorsFromLyrical() throws {
+        let feedback = NavigateToPoseAction.Feedback(
+            currentPose: PoseStamped(header: Header(frameId: "map")),
+            navigationTime: DurationMsg(sec: 3, nanosec: 500),
+            estimatedTimeRemaining: DurationMsg(sec: 7),
+            numberOfRecoveries: 1,
+            distanceRemaining: 2.5,
+            positionTrackingError: 0.125,
+            headingTrackingError: 0.25)
+        var withoutTrackingErrors = feedback
+        withoutTrackingErrors.positionTrackingError = 0
+        withoutTrackingErrors.headingTrackingError = 0
+
+        let jazzy = try roundTrip(withoutTrackingErrors, distro: .jazzy)
+        for distro in [ROS2Distro.humble, .kilted] {
+            XCTAssertEqual(try roundTrip(withoutTrackingErrors, distro: distro), jazzy, "\(distro)")
+        }
+        let lyrical = try roundTrip(feedback, distro: .lyrical)
+        XCTAssertEqual(try roundTrip(feedback, distro: .rolling), lyrical)
+        XCTAssertEqual(lyrical.count, jazzy.count + 8)
+
+        let encoder = CDREncoder(distro: .jazzy)
+        encoder.writeEncapsulationHeader()
+        try feedback.encode(to: encoder)
+        XCTAssertEqual(encoder.getData(), jazzy)
+        XCTAssertEqual(lyrical.prefix(jazzy.count), jazzy)
+        var position = Float(0.125).bitPattern.littleEndian
+        var heading = Float(0.25).bitPattern.littleEndian
+        XCTAssertEqual(
+            lyrical.suffix(8), Data(bytes: &position, count: 4) + Data(bytes: &heading, count: 4))
     }
 }

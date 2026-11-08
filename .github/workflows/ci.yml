@@ -113,6 +113,7 @@ jobs:
           swift package generate-documentation \
             --target ControlMsgs \
             --target MoveitMsgs \
+            --target Nav2Msgs \
             --target ObjectRecognitionMsgs \
             --target OctomapMsgs
       - name: Check DocC coverage
@@ -225,6 +226,7 @@ jobs:
                       dependencies: [
                           .product(name: "ControlMsgs", package: "swift-ros2-extra-interfaces"),
                           .product(name: "MoveitMsgs", package: "swift-ros2-extra-interfaces"),
+                          .product(name: "Nav2Msgs", package: "swift-ros2-extra-interfaces"),
                           .product(name: "ObjectRecognitionMsgs", package: "swift-ros2-extra-interfaces"),
                           .product(name: "OctomapMsgs", package: "swift-ros2-extra-interfaces"),
                       ]
@@ -235,12 +237,14 @@ jobs:
           cat > /tmp/consumer/Sources/Consumer/Consumer.swift <<'EOF'
           import ControlMsgs
           import MoveitMsgs
+          import Nav2Msgs
           import ObjectRecognitionMsgs
           import OctomapMsgs
 
           public let goal = GripperCommandAction.Goal()
           public let status = ServoStatus()
           public let moveGroupGoal = MoveGroupAction.Goal()
+          public let navigateToPoseGoal = NavigateToPoseAction.Goal()
           public let objectType = ObjectType()
           public let octomap = Octomap()
           EOF
