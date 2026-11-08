@@ -24,13 +24,24 @@ distribution.
   - Lyrical's feedback adds `positionTrackingError` and `headingTrackingError` (`float32`), 8
     bytes after `distanceRemaining`; they decode as `0.0` on Humble, Jazzy and Kilted.
 - The goal, the result and the SendGoal and GetResult types have one type hash on Jazzy, Kilted
-  and Lyrical. `NavigateToPoseAction.Feedback`, `NavigateToPose_FeedbackMessage` and the action
-  have one hash on Jazzy and Kilted and another on Lyrical and Rolling, from `typeInfo(for:)`.
-  Humble has no type hashes.
+  and Lyrical. `NavigateToPoseAction.Feedback` and `NavigateToPose_FeedbackMessage` have one
+  hash on Jazzy and Kilted and another on Lyrical and Rolling, from `typeInfo(for:)`; the action
+  itself has no hash of its own: `NavigateToPoseAction.typeInfo(for:)` returns an
+  `ROS2ActionTypeInfo` with one hash per type (goal, result, feedback, the wrappers and the two
+  services). Humble has no type hashes.
 
 ### Changed
 
 - The oracles install `ros-<distro>-nav2-msgs`.
+
+### Known gaps
+
+- Regenerating `Nav2Msgs` needs the next swift-ros2-rosidl release, which merges actions that
+  differ between distributions. Until it ships, the regeneration-drift and oracle-hash CI jobs
+  are expected to fail.
+- navigation2 has no Rolling release, so `ros-rolling-nav2-msgs` does not exist and the weekly
+  Rolling oracle run cannot install it. A per-distribution exclusion will come with the same
+  swift-ros2-rosidl release.
 
 ## 1.1.0 - 2026-10-29
 

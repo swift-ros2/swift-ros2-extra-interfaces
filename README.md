@@ -94,10 +94,11 @@ field is encoded only for the distributions that have it:
 
 The goal, the result, `NavigateToPose_SendGoal_Request` and the other SendGoal and GetResult
 types have one type hash on Jazzy, Kilted and Lyrical (the results differ only in constants,
-which are not hashed). `NavigateToPoseAction.Feedback`, `NavigateToPose_FeedbackMessage` and the
-action have one hash on Jazzy and Kilted and another on Lyrical and Rolling:
-`NavigateToPoseAction.typeInfo(for:)` and `NavigateToPose_FeedbackMessage.typeInfo(for:)` return
-the one of a distribution. Humble has no type hashes. Every other type has one hash.
+which are not hashed). `NavigateToPoseAction.Feedback` and `NavigateToPose_FeedbackMessage` have
+one hash on Jazzy and Kilted and another on Lyrical and Rolling. The action has no hash of its
+own: `NavigateToPoseAction.typeInfo(for:)` returns a `ROS2ActionTypeInfo` with one hash per type
+(goal, result, feedback, wrappers and services), and `NavigateToPose_FeedbackMessage.typeInfo(for:)`
+returns the feedback message's. Humble has no type hashes. Every other type has one hash.
 
 swift-ros2 sends the layout and the hash of the distribution it runs against only from 3.1.0,
 which asks generated types for `typeInfo(for:)` and creates codecs for the context's
@@ -265,7 +266,9 @@ together with the regenerated sources.
   `ros-<distro>-nav2-msgs`, `ros-<distro>-object-recognition-msgs` and
   `ros-<distro>-octomap-msgs` packages, and every CDR sample, encoded with that distribution's
   layout, with `rclpy`. The weekly run also signals when a release on the ROS build farm differs
-  from the pin.
+  from the pin. Known gap: navigation2 has no Rolling release, so `ros-rolling-nav2-msgs` does
+  not exist and the weekly Rolling run cannot install it; a per-distribution exclusion will come
+  with the next swift-ros2-rosidl release.
 
 ## License
 

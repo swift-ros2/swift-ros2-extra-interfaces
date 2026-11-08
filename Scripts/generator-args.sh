@@ -33,8 +33,9 @@ for distro in $DISTROS; do
   src=$distro
   [ "$distro" = rolling ] && src=lyrical
   printf -- '--input\ncontrol_msgs=.idl/control_msgs-%s/control_msgs@%s\n' "$src" "$distro"
-  # nav2_msgs NavigateToPose exists on every distribution; its result and feedback differ (see
-  # the README's Distributions section).
+  # nav2_msgs NavigateToPose exists on Humble to Lyrical; its result and feedback differ (see the
+  # README's Distributions section). navigation2 has no Rolling release, so Rolling reuses the
+  # Lyrical sources and has no ros-rolling-nav2-msgs package for the oracles.
   printf -- '--input\nnav2_msgs=.idl/navigation2-%s/nav2_msgs@%s\n' "$src" "$distro"
   # moveit_msgs has the Servo interfaces from Jazzy (2.6.0) on; Humble's 2.2.3 has neither,
   # and the MoveGroup closure is generated for the same distributions.
