@@ -212,4 +212,46 @@ final class RoundTripTests: XCTestCase {
         XCTAssertEqual(
             lyrical.suffix(8), Data(bytes: &position, count: 4) + Data(bytes: &heading, count: 4))
     }
+
+    /// Humble's result is one `std_msgs/Empty` (a single byte); Jazzy and later carry `error_code`
+    /// and `error_msg`, which Humble drops and decodes as 0 and "".
+    func testNavigateToPoseResultSplitsHumbleFromJazzy() throws {
+        let result = NavigateToPoseAction.Result(
+            errorCode: NavigateToPoseAction.Result.TF_ERROR, errorMsg: "TF error")
+
+        let humbleEncoder = CDREncoder(distro: .humble)
+        humbleEncoder.writeEncapsulationHeader()
+        try result.encode(to: humbleEncoder)
+        XCTAssertEqual(Array(humbleEncoder.getData()), [0x00, 0x01, 0x00, 0x00, 0x00])
+        let onHumble = try NavigateToPoseAction.Result(
+            from: try CDRDecoder(data: humbleEncoder.getData(), distro: .humble))
+        XCTAssertEqual(onHumble.errorCode, 0)
+        XCTAssertEqual(onHumble.errorMsg, "")
+        try roundTrip(NavigateToPoseAction.Result(), distro: .humble)
+
+        var jazzyBytes: Data?
+        for distro in [ROS2Distro.jazzy, .kilted, .lyrical, .rolling] {
+            let bytes = try roundTrip(result, distro: distro)
+            XCTAssertGreaterThan(bytes.count, 5, "\(distro)")
+            if let jazzyBytes { XCTAssertEqual(bytes, jazzyBytes, "\(distro)") } else { jazzyBytes = bytes }
+        }
+    }
+
+    func testNavigateToPoseWrappersPerDistribution() throws {
+        let goalId = UniqueIdentifierUUID(uuid: Array(0..<16))
+        let goal = NavigateToPoseAction.Goal(
+            pose: PoseStamped(header: Header(stamp: Time(sec: 1, nanosec: 2), frameId: "map")), behaviorTree: "")
+        let feedback = NavigateToPoseAction.Feedback(
+            currentPose: PoseStamped(header: Header(frameId: "map")), numberOfRecoveries: 2, distanceRemaining: 1.5)
+        for distro in ROS2Distro.allCases {
+            var result = NavigateToPoseAction.Result(errorCode: NavigateToPoseAction.Result.TIMEOUT, errorMsg: "late")
+            if distro == .humble { result = NavigateToPoseAction.Result() }
+            try roundTrip(NavigateToPose_SendGoal_Request(goalId: goalId, goal: goal), distro: distro)
+            try roundTrip(
+                NavigateToPose_SendGoal_Response(accepted: true, stamp: Time(sec: 12, nanosec: 345)), distro: distro)
+            try roundTrip(NavigateToPose_GetResult_Request(goalId: goalId), distro: distro)
+            try roundTrip(NavigateToPose_GetResult_Response(status: 4, result: result), distro: distro)
+            try roundTrip(NavigateToPose_FeedbackMessage(goalId: goalId, feedback: feedback), distro: distro)
+        }
+    }
 }
