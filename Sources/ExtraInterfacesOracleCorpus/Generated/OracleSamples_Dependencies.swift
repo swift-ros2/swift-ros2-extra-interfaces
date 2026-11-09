@@ -10,6 +10,24 @@ import SwiftROS2CDR
 import SwiftROS2Messages
 import TrajectoryMsgs
 
+extension DurationMsg {
+    static func oracleSample() -> DurationMsg {
+        var value = DurationMsg()
+        value.sec = -70000
+        value.nanosec = 70000
+        return value
+    }
+}
+
+extension PoseStamped {
+    static func oracleSample() -> PoseStamped {
+        var value = PoseStamped()
+        value.header = Header.oracleSample()
+        value.pose = Pose.oracleSample()
+        return value
+    }
+}
+
 extension Pose {
     static func oracleSample() -> Pose {
         var value = Pose()
@@ -58,21 +76,18 @@ extension Time {
     }
 }
 
+extension EmptyMsg {
+    static func oracleSample() -> EmptyMsg {
+        EmptyMsg()
+    }
+}
+
 extension Vector3 {
     static func oracleSample() -> Vector3 {
         var value = Vector3()
         value.x = -2.25
         value.y = -2.25
         value.z = -2.25
-        return value
-    }
-}
-
-extension PoseStamped {
-    static func oracleSample() -> PoseStamped {
-        var value = PoseStamped()
-        value.header = Header.oracleSample()
-        value.pose = Pose.oracleSample()
         return value
     }
 }
@@ -94,15 +109,6 @@ extension MultiDOFJointTrajectoryPoint {
         value.velocities = [Twist.oracleSample(), Twist.oracleSample()]
         value.accelerations = [Twist.oracleSample(), Twist.oracleSample()]
         value.timeFromStart = DurationMsg.oracleSample()
-        return value
-    }
-}
-
-extension DurationMsg {
-    static func oracleSample() -> DurationMsg {
-        var value = DurationMsg()
-        value.sec = -70000
-        value.nanosec = 70000
         return value
     }
 }

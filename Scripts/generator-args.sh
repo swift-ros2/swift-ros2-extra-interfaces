@@ -12,6 +12,7 @@ set -euo pipefail
 #   control_msgs:            GripperCommand (message and action)
 #   moveit_msgs:             ServoCommandType, ServoStatus, the MoveGroup action and every
 #                            moveit_msgs message it reaches
+#   nav2_msgs:               NavigateToPose (action)
 #   object_recognition_msgs: ObjectType (reached from CollisionObject)
 #   octomap_msgs:            Octomap, OctomapWithPose (reached from PlanningSceneWorld)
 TYPES="GripperCommand,ServoCommandType,ServoStatus"
@@ -22,8 +23,9 @@ TYPES+=",MotionPlanRequest,MoveItErrorCodes,ObjectColor,OrientationConstraint,Pl
 TYPES+=",PlanningScene,PlanningSceneWorld,PositionConstraint,RobotState,RobotTrajectory"
 TYPES+=",TrajectoryConstraints,VisibilityConstraint,WorkspaceParameters"
 TYPES+=",ObjectType,Octomap,OctomapWithPose"
-# common_interfaces packages the moveit_msgs types reference, transitively. They live in
-# swift-ros2-common-interfaces: referenced and hashed, not emitted here.
+TYPES+=",NavigateToPose"
+# common_interfaces packages the moveit_msgs and nav2_msgs types reference, transitively. They
+# live in swift-ros2-common-interfaces: referenced and hashed, not emitted here.
 COMMON="std_msgs geometry_msgs sensor_msgs shape_msgs trajectory_msgs"
 DISTROS=${1:-"humble jazzy kilted lyrical"}
 printf -- '--types\n%s\n' "$TYPES"
@@ -31,6 +33,10 @@ for distro in $DISTROS; do
   src=$distro
   [ "$distro" = rolling ] && src=lyrical
   printf -- '--input\ncontrol_msgs=.idl/control_msgs-%s/control_msgs@%s\n' "$src" "$distro"
+  # nav2_msgs NavigateToPose exists on Humble to Lyrical; its result and feedback differ (see the
+  # README's Distributions section). navigation2 has no Rolling release, so Rolling reuses the
+  # Lyrical sources and has no ros-rolling-nav2-msgs package for the oracles.
+  printf -- '--input\nnav2_msgs=.idl/navigation2-%s/nav2_msgs@%s\n' "$src" "$distro"
   # moveit_msgs has the Servo interfaces from Jazzy (2.6.0) on; Humble's 2.2.3 has neither,
   # and the MoveGroup closure is generated for the same distributions.
   if [ "$src" != humble ]; then

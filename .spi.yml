@@ -4,5 +4,6 @@ builder:
     - documentation_targets:
         - ControlMsgs
         - MoveitMsgs
+        - Nav2Msgs
         - ObjectRecognitionMsgs
         - OctomapMsgs

@@ -1,7 +1,10 @@
 import ControlMsgs
+import GeometryMsgs
 import MoveitMsgs
+import Nav2Msgs
 import ObjectRecognitionMsgs
 import OctomapMsgs
+import StdMsgs
 import SwiftROS2Messages
 import XCTest
 
@@ -111,6 +114,33 @@ final class ContractTests: XCTestCase {
         XCTAssertEqual(result.executedTrajectory, RobotTrajectory())
         XCTAssertEqual(result.trajectoryStart, RobotState())
         XCTAssertEqual(MoveGroupAction.Feedback(state: "PLANNING").state, "PLANNING")
+    }
+
+    /// The goal Conduit sends to Nav2 and the result fields it reads.
+    func testNavigateToPoseNames() {
+        XCTAssertEqual(NavigateToPoseAction.typeInfo.actionName, "nav2_msgs/action/NavigateToPose")
+        XCTAssertEqual(
+            NavigateToPose_SendGoal_Request.typeInfo.typeName, "nav2_msgs/action/NavigateToPose_SendGoal_Request")
+        XCTAssertEqual(
+            NavigateToPose_FeedbackMessage.typeInfo.typeName, "nav2_msgs/action/NavigateToPose_FeedbackMessage")
+        let goal = NavigateToPoseAction.Goal(
+            pose: PoseStamped(header: Header(frameId: "map"), pose: Pose()), behaviorTree: "")
+        XCTAssertEqual(goal.pose.header.frameId, "map")
+        XCTAssertEqual(goal.behaviorTree, "")
+        let result = NavigateToPoseAction.Result(
+            errorCode: NavigateToPoseAction.Result.TF_ERROR, errorMsg: "TF error")
+        XCTAssertEqual(result.errorCode, 9002)
+        XCTAssertEqual(result.errorMsg, "TF error")
+    }
+
+    func testNavigateToPoseResultConstants() {
+        XCTAssertEqual(NavigateToPoseAction.Result.NONE, 0)
+        XCTAssertEqual(NavigateToPoseAction.Result.UNKNOWN, 9000)
+        XCTAssertEqual(NavigateToPoseAction.Result.FAILED_TO_LOAD_BEHAVIOR_TREE, 9001)
+        XCTAssertEqual(NavigateToPoseAction.Result.TF_ERROR, 9002)
+        XCTAssertEqual(NavigateToPoseAction.Result.TIMEOUT, 9003)
+        XCTAssertEqual(NavigateToPoseAction.Result.GOAL_REJECTED, 1)
+        XCTAssertEqual(NavigateToPoseAction.Result.SEND_GOAL_FAILURE, 2)
     }
 
     func testMoveItErrorCodesConstants() {

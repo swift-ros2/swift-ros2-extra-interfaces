@@ -5,6 +5,7 @@ import ControlMsgs
 import Foundation
 import GeometryMsgs
 import MoveitMsgs
+import Nav2Msgs
 import ObjectRecognitionMsgs
 import OctomapMsgs
 import SensorMsgs
@@ -240,6 +241,21 @@ enum OracleSamples {
             distributions: ["jazzy", "kilted", "lyrical"],
             encode: { try oracleEncode(ServoCommandTypeResponse.oracleSample(), $0) },
             reencode: { try oracleReencode(ServoCommandTypeResponse.self, $0, $1) }),
+        OracleType(
+            rosName: "nav2_msgs/action/NavigateToPose_Feedback",
+            distributions: ["humble", "jazzy", "kilted", "lyrical"],
+            encode: { try oracleEncode(NavigateToPoseAction.Feedback.oracleSample(), $0) },
+            reencode: { try oracleReencode(NavigateToPoseAction.Feedback.self, $0, $1) }),
+        OracleType(
+            rosName: "nav2_msgs/action/NavigateToPose_Goal",
+            distributions: ["humble", "jazzy", "kilted", "lyrical"],
+            encode: { try oracleEncode(NavigateToPoseAction.Goal.oracleSample(), $0) },
+            reencode: { try oracleReencode(NavigateToPoseAction.Goal.self, $0, $1) }),
+        OracleType(
+            rosName: "nav2_msgs/action/NavigateToPose_Result",
+            distributions: ["humble", "jazzy", "kilted", "lyrical"],
+            encode: { try oracleEncode(NavigateToPoseAction.Result.oracleSample(), $0) },
+            reencode: { try oracleReencode(NavigateToPoseAction.Result.self, $0, $1) }),
         OracleType(
             rosName: "object_recognition_msgs/msg/ObjectType",
             distributions: ["jazzy", "kilted", "lyrical"],

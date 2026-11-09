@@ -1,5 +1,48 @@
 # Changelog
 
+## 1.2.0-rc.1
+
+Release candidate for 1.2.0: the Nav2 `NavigateToPose` action. Until 1.2.0, depend on it with
+`exact: "1.2.0-rc.1"`; `from: "1.2.0"` resolves only once 1.2.0 is tagged. Send these types with
+swift-ros2 3.1.0 or later (`from: "3.1.0"`), which uses the layout and hash of the context's
+distribution.
+
+### Added
+
+- New module `Nav2Msgs`: `nav2_msgs/action/NavigateToPose` (`NavigateToPoseAction`, with `Goal`,
+  `Result`, `Feedback` and the SendGoal / GetResult / FeedbackMessage wrappers). Generated from
+  navigation2 1.1.20 (Humble), 1.3.14 (Jazzy), 1.4.2 (Kilted) and 1.5.3 (Lyrical), the release
+  tags rosdistro lists, pinned in `idl.lock`; Rolling uses the Lyrical layout.
+- The layout differs by distribution, and each field is encoded only for the distributions that
+  have it:
+  - The goal (`pose`, `behaviorTree`) is the same everywhere.
+  - Humble's result is one `std_msgs/Empty result`. Jazzy and later have `errorCode` (`uint16`)
+    and `errorMsg` (`string`), which decode as `0` and `""` on Humble.
+  - The result constants grow per release: `NONE` from Jazzy; `UNKNOWN`,
+    `FAILED_TO_LOAD_BEHAVIOR_TREE`, `TF_ERROR` and `TIMEOUT` from Kilted; `GOAL_REJECTED` and
+    `SEND_GOAL_FAILURE` from Lyrical. `NavigateToPoseAction.Result` has all seven.
+  - Lyrical's feedback adds `positionTrackingError` and `headingTrackingError` (`float32`), 8
+    bytes after `distanceRemaining`; they decode as `0.0` on Humble, Jazzy and Kilted.
+- The goal, the result and the SendGoal and GetResult types have one type hash on Jazzy, Kilted
+  and Lyrical. `NavigateToPoseAction.Feedback` and `NavigateToPose_FeedbackMessage` have one
+  hash on Jazzy and Kilted and another on Lyrical and Rolling, from `typeInfo(for:)`; the action
+  itself has no hash of its own: `NavigateToPoseAction.typeInfo(for:)` returns an
+  `ROS2ActionTypeInfo` with one hash per type (goal, result, feedback, the wrappers and the two
+  services). Humble has no type hashes.
+
+### Changed
+
+- The oracles install `ros-<distro>-nav2-msgs`.
+- `Nav2Msgs` is generated with the `swift-ros2-gen` of swift-ros2-rosidl 1.2.0, which merges an
+  action that differs between distributions. Requires swift-ros2-rosidl 1.2.0 (`from: "1.2.0"`),
+  and the oracle workflow runs its `interface-oracles.yml@1.2.0`. The other modules are
+  unchanged.
+
+### Known gaps
+
+- navigation2 has no Rolling release, so `ros-rolling-nav2-msgs` does not exist and the weekly
+  Rolling oracle run cannot install it. A per-distribution exclusion is a follow-up.
+
 ## 1.1.0 - 2026-10-29
 
 The MoveGroup action and the types it reaches; see 1.1.0-rc.1 below. The generated code is the

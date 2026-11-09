@@ -1,8 +1,9 @@
 # Upstream IDL for Scripts/regenerate.sh and the oracles: <name> <url> <distribution> <commit>.
-# control_msgs, moveit_msgs, octomap_msgs and object_recognition_msgs are pinned at the release
-# tag rosdistro lists for the distribution (distribution.yaml "release: version"), which is what
-# the oracle installs from apt. To move a line: git ls-remote --tags <url> <version>, then run
-# Scripts/regenerate.sh and commit this file together with the regenerated sources.
+# control_msgs, moveit_msgs, navigation2 (for nav2_msgs), octomap_msgs and
+# object_recognition_msgs are pinned at the release tag rosdistro lists for the distribution
+# (distribution.yaml "release: version"), which is what the oracle installs from apt. To move a
+# line: git ls-remote --tags <url> <version>, then run Scripts/regenerate.sh and commit this file
+# together with the regenerated sources.
 # common_interfaces, rcl_interfaces and unique_identifier_msgs are the commits
 # swift-ros2-common-interfaces' idl.lock pins: their types live in that package (or in
 # swift-ros2-rosidl), and the hashes of the types here must include the same dependency IDL.
@@ -17,6 +18,10 @@ control_msgs https://github.com/ros-controls/control_msgs.git lyrical 0d5307a73e
 moveit_msgs https://github.com/moveit/moveit_msgs.git jazzy 55f802fe3ac455123efcdba1037d3abf2c8e4dcb
 moveit_msgs https://github.com/moveit/moveit_msgs.git kilted a76e0d67f356735b0a59313eca2c9a3fe2e17da7
 moveit_msgs https://github.com/moveit/moveit_msgs.git lyrical 15daf790c8008665f1e577755562f14b43bbd410
+navigation2 https://github.com/ros-navigation/navigation2.git humble a097086719c88f781aa59788eca29ac6ca5e56db
+navigation2 https://github.com/ros-navigation/navigation2.git jazzy 58e4019eb149ed4387938d9cd13f38659b86f754
+navigation2 https://github.com/ros-navigation/navigation2.git kilted 3478badb7e2802c9ff1f805fb5493dc1d0792a5a
+navigation2 https://github.com/ros-navigation/navigation2.git lyrical ae23216fd4d0178f456975b644b842cb482a452e
 object_recognition_msgs https://github.com/wg-perception/object_recognition_msgs.git jazzy 811fb385ec4c1919dce2b30334fe9f49639073fd
 object_recognition_msgs https://github.com/wg-perception/object_recognition_msgs.git kilted 811fb385ec4c1919dce2b30334fe9f49639073fd
 object_recognition_msgs https://github.com/wg-perception/object_recognition_msgs.git lyrical 811fb385ec4c1919dce2b30334fe9f49639073fd
