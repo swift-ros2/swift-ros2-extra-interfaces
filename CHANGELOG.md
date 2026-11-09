@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.2.0 - 2026-11-09
+
+The Nav2 `NavigateToPose` action; see 1.2.0-rc.1 below. The generated code is the same as
+1.2.0-rc.1. It needs swift-ros2-rosidl 1.2.0 (`from: "1.2.0"`); send these types with swift-ros2
+3.1.0 or later (`from: "3.1.0"`). Conduit 3.0, built against 1.2.0-rc.1 and swift-ros2 3.1.1,
+sends `NavigateToPose` goals to Nav2 on a ROS 2 Jazzy host and reads their outcomes, including
+canceled goals and a goal that replaces one still driving.
+
+Checked live: 1.2.0-rc.1, through swift-ros2 3.1.1's `ROS2ActionClient` and swift-ros2-rosidl
+1.2.0, sends `NavigateToPose` goals from macOS to an rclpy action server on ROS 2 Humble, Jazzy,
+Kilted and Lyrical hosts (nav2_msgs 1.1.20, 1.3.13, 1.4.2 and 1.5.2) over both the wire Zenoh and
+the wire DDS transports. On each, one goal succeeds with every feedback message decoded, Lyrical's
+`positionTrackingError` and `headingTrackingError` included, and its result's `errorCode` and
+`errorMsg` read (`0` and `""` from Humble's `std_msgs/Empty` result); a second goal is canceled by
+its goal id and ends CANCELED. The Jazzy, Kilted and Lyrical hosts report the feedback topic with
+the type hash `NavigateToPose_FeedbackMessage.typeInfo(for:)` gives: one hash on Jazzy and Kilted,
+another on Lyrical.
+
 ## 1.2.0-rc.1
 
 Release candidate for 1.2.0: the Nav2 `NavigateToPose` action. Until 1.2.0, depend on it with

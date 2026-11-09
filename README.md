@@ -14,7 +14,7 @@ it downloads no native frameworks. Publish, subscribe, call and send goals with
 // The interfaces need macOS 13, iOS 16, Mac Catalyst 16 or visionOS 1, like swift-ros2.
 platforms: [.iOS(.v16), .macOS(.v13), .macCatalyst(.v16), .visionOS(.v1)],
 dependencies: [
-    .package(url: "https://github.com/swift-ros2/swift-ros2-extra-interfaces.git", from: "1.1.0"),
+    .package(url: "https://github.com/swift-ros2/swift-ros2-extra-interfaces.git", from: "1.2.0"),
     // swift-ros2 does the publishing, subscribing, calls and goals. 3.1.0 or later sends the
     // layout and hash of the distribution it runs against (see Distributions).
     .package(url: "https://github.com/swift-ros2/swift-ros2.git", from: "3.1.0"),
