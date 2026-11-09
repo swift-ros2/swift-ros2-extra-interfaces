@@ -267,8 +267,8 @@ together with the regenerated sources.
   `ros-<distro>-octomap-msgs` packages, and every CDR sample, encoded with that distribution's
   layout, with `rclpy`. The weekly run also signals when a release on the ROS build farm differs
   from the pin. Known gap: navigation2 has no Rolling release, so `ros-rolling-nav2-msgs` does
-  not exist and the weekly Rolling run cannot install it; a per-distribution exclusion will come
-  with the next swift-ros2-rosidl release.
+  not exist and the weekly Rolling run cannot install it; a per-distribution exclusion is a
+  follow-up.
 
 ## License
 

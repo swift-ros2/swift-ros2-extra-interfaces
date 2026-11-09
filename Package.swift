@@ -11,7 +11,7 @@ import PackageDescription
 // frameworks.
 
 var dependencies: [Package.Dependency] = [
-    .package(url: "https://github.com/swift-ros2/swift-ros2-rosidl.git", from: "1.1.1"),
+    .package(url: "https://github.com/swift-ros2/swift-ros2-rosidl.git", from: "1.2.0"),
     .package(url: "https://github.com/swift-ros2/swift-ros2-common-interfaces.git", from: "1.0.0"),
 ]
 if ProcessInfo.processInfo.environment["SWIFT_ROS2_DOCS_BUILD"] == "1" {

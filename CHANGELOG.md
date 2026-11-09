@@ -33,15 +33,15 @@ distribution.
 ### Changed
 
 - The oracles install `ros-<distro>-nav2-msgs`.
+- `Nav2Msgs` is generated with the `swift-ros2-gen` of swift-ros2-rosidl 1.2.0, which merges an
+  action that differs between distributions. Requires swift-ros2-rosidl 1.2.0 (`from: "1.2.0"`),
+  and the oracle workflow runs its `interface-oracles.yml@1.2.0`. The other modules are
+  unchanged.
 
 ### Known gaps
 
-- Regenerating `Nav2Msgs` needs the next swift-ros2-rosidl release, which merges actions that
-  differ between distributions. Until it ships, the regeneration-drift and oracle-hash CI jobs
-  are expected to fail.
 - navigation2 has no Rolling release, so `ros-rolling-nav2-msgs` does not exist and the weekly
-  Rolling oracle run cannot install it. A per-distribution exclusion will come with the same
-  swift-ros2-rosidl release.
+  Rolling oracle run cannot install it. A per-distribution exclusion is a follow-up.
 
 ## 1.1.0 - 2026-10-29
 
